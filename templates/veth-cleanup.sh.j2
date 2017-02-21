@@ -10,6 +10,12 @@ ip link del {{ inventory_hostname[-8:].replace('-', '').replace('_', '') }}_eth0
 {% for key, value in container_networks.items() %}
 {% if value.type is not defined or value.type == 'veth' %}
 ip link del {{ inventory_hostname[-8:].replace('-', '').replace('_', '') }}_{{ value.interface }} || true
+{% if value.bridge is defined %}
+if which ovs-vsctl &>/dev/null && ovs-vsctl br-exists "{{ value.bridge }}" && \
+      ovs-vsctl list-ports "{{ value.bridge }}" | grep -q "{{ inventory_hostname[-8:].replace('-', '').replace('_', '') }}_{{ value.interface }}"; then
+    ovs-vsctl del-port "{{ value.bridge }}" "{{ inventory_hostname[-8:].replace('-', '').replace('_', '') }}_{{ value.interface }}"
+fi
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
