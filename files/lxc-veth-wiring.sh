@@ -43,7 +43,12 @@ if ip a l "${VETH_PEER}";then
   EXIT=3
 fi
 
-if ! brctl show "${BRIDGE}" | grep -q "${VETH}"; then
+if which ovs-vsctl &>/dev/null && ovs-vsctl br-exists "${BRIDGE}"; then
+  if ! ovs-vsctl list-ports "${BRIDGE}" | grep -q "${VETH}"; then
+    ovs-vsctl add-port "${BRIDGE}" "${VETH}"
+    EXIT=3
+  fi
+elif ! brctl show "${BRIDGE}" | grep -q "${VETH}"; then
   brctl addif "${BRIDGE}" "${VETH}"
   EXIT=3
 fi
