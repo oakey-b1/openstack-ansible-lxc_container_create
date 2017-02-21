@@ -12,6 +12,8 @@ iface {{ item.value.interface }} inet static
     mtu {{ item.value.mtu|default(lxc_container_default_mtu) }}
     # needed to enable gratuitous arps on interface events
     post-up sysctl -w net.ipv4.conf.$IFACE.arp_notify=1
+    # disable IPv6 as eth0 is our default route
+    pre-up sysctl -w net.ipv6.conf.$IFACE.autoconf=0
     # needed to force an interface event (setting mac to what it already is)
     post-up ip link set $IFACE address $(cat /sys/class/net/$IFACE/address)
 {% if item.value.static_routes is defined %}
